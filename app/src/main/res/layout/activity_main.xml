@@ -6,13 +6,25 @@
     android:layout_height="match_parent"
     tools:context="com.cxmax.danmakuview.MainActivity">
 
-    <TextView
+    <Button
+        android:id="@+id/hello_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
+        android:text="start/hide"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintVertical_bias="0.2"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <com.cxmax.danmakuview.library.widget.DanmakuView
+        android:id="@+id/danmaku"
+        android:layout_width="800dp"
+        android:layout_height="400dp"
+        android:layout_marginTop="10dip"
+        android:background="@android:color/holo_blue_dark"
+        app:layout_constraintTop_toBottomOf="@+id/hello_btn">
+
+    </com.cxmax.danmakuview.library.widget.DanmakuView>
 
 </android.support.constraint.ConstraintLayout>
