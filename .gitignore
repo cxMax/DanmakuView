@@ -36,8 +36,6 @@ build/
 .DS_Store
 
 *.keystore
+library/libs/
 app/libs/
 app/src/main/res/drawable/
-widget/libs/
-widget/src/main/java/
-widget/src/main/res/drawable/
