@@ -31,10 +31,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         danmakuView = (DanmakuView) findViewById(R.id.danmaku);
         danmakuView.addDanmakuViews(contents);
-        findViewById(R.id.hello_btn).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.start_btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 danmakuView.start();
+            }
+        });
+        findViewById(R.id.stop_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                danmakuView.stop();
             }
         });
     }

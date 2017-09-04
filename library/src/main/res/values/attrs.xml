@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="DanmakuView">
-        <attr name="content_text_size" format="dimension" />
-        <attr name="content_text_color" format="color" />
-        <attr name="content_text_clickable" format="boolean" />
+        <attr name="common_text_size" format="dimension" />
+        <attr name="common_text_color" format="color" />
+        <attr name="common_text_clickable" format="boolean" />
     </declare-styleable>
 </resources>

@@ -8,9 +8,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 
 import com.cxmax.danmakuview.library.R;
 import com.cxmax.danmakuview.library.utils.Util;
@@ -92,9 +94,9 @@ public class DanmakuView extends LinearLayout {
         if (attrs != null) {
             TypedArray attr = context.obtainStyledAttributes(attrs, R.styleable.DanmakuView, 0, 0);
             if (attr != null) {
-                childTextSize = attr.getDimensionPixelSize(R.styleable.DanmakuView_content_text_size, context.getResources().getDimensionPixelSize(R.dimen.danmaku_common_text_size_12));
-                childTextColor = attr.getColor(R.styleable.DanmakuView_content_text_color, ContextCompat.getColor(context, R.color.white));
-                childTextClickable = attr.getBoolean(R.styleable.DanmakuView_content_text_clickable, Boolean.FALSE);
+                childTextSize = attr.getDimensionPixelSize(R.styleable.DanmakuView_common_text_size, context.getResources().getDimensionPixelSize(R.dimen.danmaku_common_text_size_12));
+                childTextColor = attr.getColor(R.styleable.DanmakuView_common_text_color, ContextCompat.getColor(context, R.color.white));
+                childTextClickable = attr.getBoolean(R.styleable.DanmakuView_common_text_clickable, Boolean.FALSE);
                 attr.recycle();
             }
         }
@@ -172,7 +174,9 @@ public class DanmakuView extends LinearLayout {
     void createChildView(int index, String content, boolean recreate) {
         final TextView textView = new TextView(context);
         textView.setTextColor(childTextColor);
-        textView.setTextSize(childTextSize);
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, childTextSize);
+        textView.setText(content);
+        textView.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.light_yellow));
         LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         int row = random.nextInt(100) % DEFAULT_ROW_NUM;
         while (row == lastRow) {

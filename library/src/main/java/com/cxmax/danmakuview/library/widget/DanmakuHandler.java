@@ -62,9 +62,9 @@ class DanmakuHandler extends Handler {
             @Override
             public void onAnimationEnd(Animator animator) {
                 // Random change of content
-//                danmakuView.removeView(child);
-//                int index = danmakuView.getRandom().nextInt(100) % danmakuView.getContents().size();
-//                danmakuView.createChildView(pos, danmakuView.getContents().get(index), true);
+                danmakuView.removeView(child);
+                int index = danmakuView.getRandom().nextInt(100) % danmakuView.getContents().size();
+                danmakuView.createChildView(pos, danmakuView.getContents().get(index), true);
                 sendEmptyMessageDelayed(pos, DEFAULT_DELAY_DURATION);
                 animators.remove(animator);
             }
