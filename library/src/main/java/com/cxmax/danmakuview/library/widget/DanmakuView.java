@@ -11,6 +11,7 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 
@@ -31,7 +32,7 @@ import java.util.Random;
  * Created by caixi on 17-8-31.
  */
 
-public class DanmakuView extends LinearLayout {
+public class DanmakuView extends RelativeLayout {
 
     private static final int DEFAULT_MAX_SHOWN_NUM = 15;
     private static final int DEFAULT_ROW_NUM = 4;
