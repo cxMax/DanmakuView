@@ -10,13 +10,13 @@ import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 
 import com.cxmax.danmakuview.library.R;
-import com.cxmax.danmakuview.library.utils.Util;
+import com.cxmax.danmakuview.library.utils.Asserts;
+import com.cxmax.danmakuview.library.utils.DevicesUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -111,7 +111,7 @@ public class DanmakuView extends RelativeLayout {
         if (specMode == MeasureSpec.EXACTLY) {
             width = specSize;
         } else if (specMode == MeasureSpec.AT_MOST) {
-            width = Util.getDisplayMetrics(context).widthPixels;
+            width = DevicesUtil.getDisplayMetrics(context).widthPixels;
         }
 
         specMode = MeasureSpec.getMode(heightMeasureSpec);
@@ -119,7 +119,7 @@ public class DanmakuView extends RelativeLayout {
         if (specMode == MeasureSpec.EXACTLY) {
             height = specSize;
         } else if (specMode == MeasureSpec.AT_MOST) {
-            height = Util.getDisplayMetrics(context).heightPixels;
+            height = DevicesUtil.getDisplayMetrics(context).heightPixels;
         }
 
         setMeasuredDimension(width, height);
@@ -153,7 +153,7 @@ public class DanmakuView extends RelativeLayout {
     }
 
     public void addDanmakuViews(List<String> contents) {
-        if (!Util.isEmpty(contents)) {
+        if (!Asserts.isEmpty(contents)) {
             this.contents = contents;
             for (int i = 0; i < (contents.size() <= DEFAULT_MAX_SHOWN_NUM ? contents.size() : DEFAULT_MAX_SHOWN_NUM); i++) {
                 createChildView(i, contents.get(i), false);
