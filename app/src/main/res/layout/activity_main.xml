@@ -30,12 +30,34 @@
         app:layout_constraintVertical_bias="0.2"
         app:layout_constraintHorizontal_bias="0.8" />
 
+    <Button
+        android:id="@+id/resume_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="resume"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/start_btn"
+        app:layout_constraintVertical_bias="0.2"
+        app:layout_constraintHorizontal_bias="0.2" />
+
+    <Button
+        android:id="@+id/pause_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="pause"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/stop_btn"
+        app:layout_constraintVertical_bias="0.2"
+        app:layout_constraintHorizontal_bias="0.8" />
+
     <com.cxmax.danmakuview.library.danmaku.DanmakuView
         android:id="@+id/danmaku"
         android:layout_width="800dp"
         android:layout_height="400dp"
         android:layout_marginTop="10dip"
-        app:layout_constraintTop_toBottomOf="@+id/start_btn">
+        app:layout_constraintTop_toBottomOf="@+id/resume_btn">
 
     </com.cxmax.danmakuview.library.danmaku.DanmakuView>
 
