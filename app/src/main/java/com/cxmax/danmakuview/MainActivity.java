@@ -4,9 +4,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 
-import com.cxmax.danmakuview.library.widget.DanmakuView;
+import com.cxmax.danmakuview.library.danmaku.DanmakuView;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

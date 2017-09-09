@@ -4,5 +4,9 @@
         <attr name="common_text_size" format="dimension" />
         <attr name="common_text_color" format="color" />
         <attr name="common_text_clickable" format="boolean" />
+        <attr name="max_children_num" format="integer" />
+        <attr name="max_row_num" format="integer" />
+        <attr name="item_duration" format="integer" />
+        <attr name="common_orientation" format="integer" />
     </declare-styleable>
 </resources>
