@@ -16,8 +16,10 @@ import com.cxmax.danmakuview.library.danmaku.model.AbsDanmakuItemProvider;
 import com.cxmax.danmakuview.library.danmaku.param.AnimOption;
 import com.cxmax.danmakuview.library.danmaku.param.DanmakuOptions;
 import com.cxmax.danmakuview.library.danmaku.param.DanmakuOrientation;
+import com.cxmax.danmakuview.library.danmaku.typepool.IAdapter;
 import com.cxmax.danmakuview.library.danmaku.typepool.ITypePool;
 import com.cxmax.danmakuview.library.danmaku.typepool.TypePoolImpl;
+import com.cxmax.danmakuview.library.danmaku.typepool.linker.DefaultLinker;
 import com.cxmax.danmakuview.library.danmaku.typepool.linker.Linker;
 import com.cxmax.danmakuview.library.danmaku.typepool.linker.OneToManyBuilder;
 import com.cxmax.danmakuview.library.danmaku.typepool.linker.OneToManyFlow;
@@ -27,10 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import static com.cxmax.danmakuview.library.danmaku.DanmakuHandler.ANIM_PAUSE;
-import static com.cxmax.danmakuview.library.danmaku.DanmakuHandler.ANIM_RESUME;
-import static com.cxmax.danmakuview.library.danmaku.DanmakuHandler.ANIM_START;
-import static com.cxmax.danmakuview.library.danmaku.DanmakuHandler.ANIM_STOP;
 import static com.cxmax.danmakuview.library.danmaku.param.DanmakuOptions.DEFAULT_MAX_SPEED;
 import static com.cxmax.danmakuview.library.danmaku.param.DanmakuOptions.DEFAULT_MIN_SPEED;
 
@@ -121,31 +119,11 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
         handler.release();
     }
 
+    // ------------- 弹幕控制调用函数 -------------------
+
     public void prepare(@NonNull DanmakuOptions options) {
         assureNecessaryParamsNotNull(options);
         removeAllViews();
-    }
-
-    @SuppressWarnings("unchecked")
-    AbsDanmakuItemProvider generateChildView() {
-        int pos = (int) (Math.random() * data.size());
-        AbsDanmakuItemProvider provider = typePool.getItemViewProviders().get(pos);
-        // 创建 view
-        View child = provider.createView(inflater, this);
-        // 数据填充 view
-        provider.updateView(data.get(pos));
-        LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-        params.topMargin = random.nextInt(options.getMaxRowNum()) * provider.onMeasureHeight(data.get(pos));
-        AnimOption animOption = new AnimOption();
-        int start = this.getRight() - this.getLeft() - this.getPaddingLeft();
-        animOption.viewMeasuredWidth = provider.onMeasureWidth(data.get(pos));
-        animOption.startPos = start;
-        animOption.speed = (int) (DEFAULT_MIN_SPEED + (DEFAULT_MAX_SPEED - DEFAULT_MIN_SPEED) * Math.random());
-        provider.setAnimOption(animOption);
-        provider.setView(child);
-        addView(child);
-        return provider;
     }
 
     @Override
@@ -155,22 +133,24 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
 
     @Override
     public void start() {
-        handler.sendEmptyMessageDelayed(ANIM_START, options.getDuration());
+        handler.sendEmptyMessage(DanmakuHandler.ANIM_START);
     }
 
     @Override
     public void stop() {
-        handler.sendEmptyMessage(ANIM_STOP);
+        handler.removeMessages(DanmakuHandler.ANIM_START);
+        handler.sendEmptyMessage(DanmakuHandler.ANIM_STOP);
     }
 
     @Override
     public void pause() {
-        handler.sendEmptyMessage(ANIM_PAUSE);
+        handler.removeMessages(DanmakuHandler.ANIM_START);
+        handler.sendEmptyMessage(DanmakuHandler.ANIM_PAUSE);
     }
 
     @Override
     public void resume() {
-        handler.sendEmptyMessage(ANIM_RESUME);
+        handler.sendEmptyMessage(DanmakuHandler.ANIM_RESUME);
     }
 
     @Override
@@ -194,6 +174,7 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
     @Override
     public <T> void register(@NonNull Class<? extends T> clazz, @NonNull AbsDanmakuItemProvider<T> binder) {
         checkAndRemoveAllTypesIfNeed(clazz);
+        typePool.register(clazz, binder, new DefaultLinker<T>());
     }
 
     @Override
@@ -206,8 +187,7 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
     public void registerAll(@NonNull ITypePool pool) {
         final int size = pool.getClasses().size();
         for (int i = 0; i < size; i++) {
-            registerWithoutChecking(pool.getClasses().get(i), pool.getItemViewProviders().get(i), pool.getLinkers().get(i)
-            );
+            registerWithoutChecking(pool.getClasses().get(i), pool.getItemViewProviders().get(i), pool.getLinkers().get(i));
         }
     }
 
@@ -220,6 +200,41 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
     private void registerWithoutChecking(@NonNull Class clazz, @NonNull AbsDanmakuItemProvider provider, @NonNull Linker linker) {
         checkAndRemoveAllTypesIfNeed(clazz);
         typePool.register(clazz, provider, linker);
+    }
+
+    @Override
+    public int indexInTypesOf(@NonNull Object item){
+        int index = typePool.firstIndexOf(item.getClass());
+        if (index != -1) {
+            @SuppressWarnings("unchecked")
+            Linker<Object> linker = (Linker<Object>) typePool.getLinkers().get(index);
+            return index + linker.index(item);
+        }
+        throw new NullPointerException("you haven't registered the provider for  {className}.class in the TypePool ".replace("{className}", item.toString()));
+    }
+
+    @SuppressWarnings("unchecked")
+    AbsDanmakuItemProvider generateChildView() {
+        int pos = (int) (Math.random() * data.size());
+        int index = indexInTypesOf(data.get(pos));
+        AbsDanmakuItemProvider provider = typePool.getItemViewProviders().get(index);
+        // 创建 view
+        View child = provider.createView(inflater, null);
+        // 数据填充 view
+        provider.updateView(data.get(pos));
+        LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+        params.topMargin = random.nextInt(options.getMaxRowNum()) * provider.onMeasureHeight(data.get(pos));
+        AnimOption animOption = new AnimOption();
+        int start = this.getRight() - this.getLeft() - this.getPaddingLeft();
+        animOption.viewMeasuredWidth = provider.onMeasureWidth(data.get(pos));
+        Log.e(TAG, "generateChildView: " + provider.onMeasureWidth(data.get(pos)) );
+        animOption.startPos = start;
+        animOption.speed = (int) (DEFAULT_MIN_SPEED + (DEFAULT_MAX_SPEED - DEFAULT_MIN_SPEED) * Math.random());
+        provider.setAnimOption(animOption);
+        provider.setView(child);
+        addView(child, params);
+        return provider;
     }
 
     private void checkAndRemoveAllTypesIfNeed(@NonNull Class<?> clazz) {

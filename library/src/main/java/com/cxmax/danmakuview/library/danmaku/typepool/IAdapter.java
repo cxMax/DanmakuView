@@ -1,10 +1,9 @@
-package com.cxmax.danmakuview.library.danmaku;
+package com.cxmax.danmakuview.library.danmaku.typepool;
 
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 
 import com.cxmax.danmakuview.library.danmaku.model.AbsDanmakuItemProvider;
-import com.cxmax.danmakuview.library.danmaku.typepool.ITypePool;
 import com.cxmax.danmakuview.library.danmaku.typepool.linker.Linker;
 import com.cxmax.danmakuview.library.danmaku.typepool.linker.OneToManyFlow;
 
@@ -26,4 +25,6 @@ public interface IAdapter {
     void registerAll(@NonNull final ITypePool pool);
 
     <T> void registerWithLinker(@NonNull Class<? extends T> clazz, @NonNull AbsDanmakuItemProvider<T> binder, @NonNull Linker<T> linker);
+
+    int indexInTypesOf(@NonNull Object item);
 }

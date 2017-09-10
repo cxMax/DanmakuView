@@ -1,5 +1,6 @@
 package com.cxmax.danmakuview;
 
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -9,7 +10,9 @@ import com.cxmax.danmakuview.itemview.DanmakuTextItemProvider;
 import com.cxmax.danmakuview.library.danmaku.DanmakuView;
 import com.cxmax.danmakuview.library.danmaku.param.DanmakuOptions;
 import com.cxmax.danmakuview.library.danmaku.param.DanmakuOrientation;
+import com.cxmax.danmakuview.library.danmaku.typepool.util.TypePoolAsserts;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -59,6 +62,14 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @NonNull private List<Text> initializeTexts() {
+        List<Text> texts = new ArrayList<>();
+        for (String s : contents) {
+            texts.add(new Text(s));
+        }
+        return texts;
+    }
+
     private void initializeDanmakuView() {
         danmakuView = (DanmakuView) findViewById(R.id.danmaku);
 
@@ -70,6 +81,9 @@ public class MainActivity extends AppCompatActivity {
                 .setMaxShownNum(15)
                 .setDuration(500);
         danmakuView.prepare(options);
+        List<Text> data = initializeTexts();
+        danmakuView.setData(data);
+        TypePoolAsserts.assertAllRegistered(danmakuView, data);
     }
 
     @Override

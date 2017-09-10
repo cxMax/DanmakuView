@@ -2,7 +2,7 @@ package com.cxmax.danmakuview.library.danmaku.typepool.linker;
 
 import android.support.annotation.NonNull;
 
-import com.cxmax.danmakuview.library.danmaku.IAdapter;
+import com.cxmax.danmakuview.library.danmaku.typepool.IAdapter;
 import com.cxmax.danmakuview.library.danmaku.model.AbsDanmakuItemProvider;
 
 /**

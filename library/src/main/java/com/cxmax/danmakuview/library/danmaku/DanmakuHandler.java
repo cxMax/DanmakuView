@@ -6,13 +6,13 @@ import android.annotation.SuppressLint;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
-import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 
 import com.cxmax.danmakuview.library.danmaku.model.AbsDanmakuItemProvider;
+import com.cxmax.danmakuview.library.danmaku.param.DanmakuOptions;
 
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * @describe :
@@ -22,7 +22,7 @@ import java.util.Set;
  * Created by cxmax on 2017/9/3.
  */
 
-class DanmakuHandler extends Handler {
+class  DanmakuHandler extends Handler {
 
     static final int ANIM_START = 0x100; //256
     static final int ANIM_RESUME = 0x101; //257
@@ -33,7 +33,7 @@ class DanmakuHandler extends Handler {
     private Set<ObjectAnimator> animators;
 
     {
-        animators = new HashSet<>();
+        animators = new CopyOnWriteArraySet<>();
     }
 
     DanmakuHandler(@NonNull DanmakuView danmakuView) {
@@ -55,7 +55,7 @@ class DanmakuHandler extends Handler {
                 final ObjectAnimator objAnim =ObjectAnimator
                         //滑动位置是x方向滑动，从屏幕宽度+View的长度到左边0-View的长度
                         .ofFloat(child,"translationX" , child.getAnimOption().startPos, -child.getAnimOption().viewMeasuredWidth)
-                        .setDuration(child.getAnimOption().speed);
+                        .setDuration(500);
                 //设置移动的过程速度，开始快之后满
                 objAnim.setInterpolator(new DecelerateInterpolator());
                 //开始动画
@@ -70,8 +70,9 @@ class DanmakuHandler extends Handler {
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         child.getView().clearAnimation();
-                        animators.remove(objAnim);
+                        animators.remove(animation);
                         danmakuView.removeView(child.getView());
+//                        danmakuView.removeAllViews();
                     }
 
                     @Override
@@ -85,21 +86,25 @@ class DanmakuHandler extends Handler {
                     }
                 });
                 animators.add(objAnim);
+                sendNewStartMessageInRandomDelay();
                 break;
             case ANIM_RESUME:
                 for (ObjectAnimator animator: animators) {
-                    animator.resume();
+                    if (animator.isPaused()) {
+                        animator.resume();
+                    }
                 }
+                sendNewStartMessageInRandomDelay();
                 break;
             case ANIM_PAUSE:
                 for (ObjectAnimator animator: animators) {
-                    animator.pause();
+                    if (animator.isRunning()) {
+                        animator.pause();
+                    }
                 }
                 break;
             case ANIM_STOP:
-                for (ObjectAnimator animator: animators) {
-                    animator.end();
-                }
+                release();
                 break;
 
         }
@@ -109,6 +114,13 @@ class DanmakuHandler extends Handler {
         for (ObjectAnimator animator : animators) {
             animator.cancel();
         }
+        animators.clear();
+        danmakuView.removeAllViews();
         removeCallbacksAndMessages(null);
+    }
+
+    private void sendNewStartMessageInRandomDelay() {
+        int duration = (int) ((DanmakuOptions.DEFAULT_MAX_DELAY_DURATION - DanmakuOptions.DEFAULT_MIN_DELAY_DURATION) * Math.random());
+        this.sendEmptyMessageDelayed(ANIM_START, duration);
     }
 }

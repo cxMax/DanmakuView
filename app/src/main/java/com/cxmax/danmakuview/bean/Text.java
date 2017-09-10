@@ -9,5 +9,13 @@ package com.cxmax.danmakuview.bean;
  */
 
 public class Text {
+
     public String title;
+
+    public Text() {
+    }
+
+    public Text(String title) {
+        this.title = title;
+    }
 }
