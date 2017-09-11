@@ -1,8 +1,7 @@
 package com.cxmax.danmakuview.itemview;
 
-import android.graphics.Rect;
 import android.support.annotation.NonNull;
-import android.text.TextPaint;
+import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,12 +28,15 @@ public class DanmakuImageItemProvider extends AbsDanmakuItemProvider<Image> {
     private TextView title;
 
     @Override
-    public View createView(@NonNull LayoutInflater inflater, @NonNull ViewGroup parent) {
-        View root = inflater.inflate(R.layout.item_danmaku_image_view, parent);
+    public int initializeLayoutRes() {
+        return R.layout.item_danmaku_image_view;
+    }
+
+    @Override
+    public void initView(@NonNull View root) {
         layout = (LinearLayout) root.findViewById(R.id.layout);
         icon = (ImageView) root.findViewById(R.id.icon);
         title = (TextView) root.findViewById(R.id.title);
-        return root;
     }
 
     @Override
@@ -48,19 +50,4 @@ public class DanmakuImageItemProvider extends AbsDanmakuItemProvider<Image> {
 
     }
 
-    @Override
-    public int onMeasureWidth(Image image) {
-        if (layout == null || image == null) {
-            return 0;
-        }
-        return layout.getMeasuredWidth();
-    }
-
-    @Override
-    public int onMeasureHeight(Image image) {
-        if (layout == null || image == null) {
-            return 0;
-        }
-        return layout.getMeasuredHeight();
-    }
 }

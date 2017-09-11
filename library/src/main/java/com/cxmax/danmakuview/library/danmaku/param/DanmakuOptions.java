@@ -26,7 +26,7 @@ public class DanmakuOptions {
     private int maxShownNum;
 
     @DanmakuOrientation.Orientation
-    private int orientation;
+    private int orientation = DanmakuOrientation.DIRECTION_LEFT_TO_RIGHT;
     private int speed;
 
     public int width; // 控件 宽
@@ -69,7 +69,7 @@ public class DanmakuOptions {
         return this;
     }
 
-    public DanmakuOptions setOrientation(int orientation) {
+    public DanmakuOptions setOrientation(@DanmakuOrientation.Orientation int orientation) {
         this.orientation = orientation;
         return this;
     }
@@ -103,7 +103,7 @@ public class DanmakuOptions {
         return maxShownNum;
     }
 
-    public int getOrientation() {
+    @DanmakuOrientation.Orientation public int getOrientation() {
         return orientation;
     }
 

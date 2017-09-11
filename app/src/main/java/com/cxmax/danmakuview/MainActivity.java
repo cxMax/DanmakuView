@@ -80,9 +80,9 @@ public class MainActivity extends AppCompatActivity {
                 .setMaxRowNum(4)
                 .setMaxShownNum(15)
                 .setDuration(500);
-        danmakuView.prepare(options);
         List<Text> data = initializeTexts();
         danmakuView.setData(data);
+        danmakuView.prepare();
         TypePoolAsserts.assertAllRegistered(danmakuView, data);
     }
 

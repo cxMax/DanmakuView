@@ -3,6 +3,7 @@ package com.cxmax.danmakuview.itemview;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.text.TextPaint;
 import android.view.LayoutInflater;
@@ -30,11 +31,14 @@ public class DanmakuTextItemProvider extends AbsDanmakuItemProvider<Text>{
     private ConstraintLayout layout;
 
     @Override
-    public View createView(@NonNull LayoutInflater inflater,@NonNull ViewGroup parent) {
-        View root = inflater.inflate(R.layout.item_danmaku_text_view, parent);
+    public int initializeLayoutRes() {
+        return R.layout.item_danmaku_text_view;
+    }
+
+    @Override
+    public void initView(@Nullable View root) {
         layout = (ConstraintLayout) root.findViewById(R.id.layout);
         title = (TextView) root.findViewById(R.id.title);
-        return root;
     }
 
     @Override
@@ -49,25 +53,4 @@ public class DanmakuTextItemProvider extends AbsDanmakuItemProvider<Text>{
 
     }
 
-    @Override
-    public int onMeasureWidth(Text text) {
-        if (title == null || text == null) {
-            return 0;
-        }
-        Rect bounds = new Rect();
-        TextPaint paint = title.getPaint();
-        paint.getTextBounds(text.title, 0, text.title.length(), bounds);
-        return bounds.width();
-    }
-
-    @Override
-    public int onMeasureHeight(Text text) {
-        if (title == null || text == null) {
-            return 0;
-        }
-        Rect bounds = new Rect();
-        TextPaint paint = title.getPaint();
-        paint.getTextBounds(text.title, 0, text.title.length(), bounds);
-        return bounds.height();
-    }
 }

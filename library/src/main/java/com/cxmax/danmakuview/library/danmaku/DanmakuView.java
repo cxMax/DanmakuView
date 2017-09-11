@@ -13,7 +13,6 @@ import android.widget.RelativeLayout;
 
 import com.cxmax.danmakuview.library.R;
 import com.cxmax.danmakuview.library.danmaku.model.AbsDanmakuItemProvider;
-import com.cxmax.danmakuview.library.danmaku.param.AnimOption;
 import com.cxmax.danmakuview.library.danmaku.param.DanmakuOptions;
 import com.cxmax.danmakuview.library.danmaku.param.DanmakuOrientation;
 import com.cxmax.danmakuview.library.danmaku.typepool.IAdapter;
@@ -23,14 +22,17 @@ import com.cxmax.danmakuview.library.danmaku.typepool.linker.DefaultLinker;
 import com.cxmax.danmakuview.library.danmaku.typepool.linker.Linker;
 import com.cxmax.danmakuview.library.danmaku.typepool.linker.OneToManyBuilder;
 import com.cxmax.danmakuview.library.danmaku.typepool.linker.OneToManyFlow;
+import com.cxmax.danmakuview.library.utils.Asserts;
 import com.cxmax.danmakuview.library.utils.DevicesUtil;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static com.cxmax.danmakuview.library.danmaku.param.DanmakuOptions.DEFAULT_MAX_SPEED;
-import static com.cxmax.danmakuview.library.danmaku.param.DanmakuOptions.DEFAULT_MIN_SPEED;
+import static com.cxmax.danmakuview.library.danmaku.param.DanmakuOrientation.DIRECTION_BOTTOM_TO_TOP;
+import static com.cxmax.danmakuview.library.danmaku.param.DanmakuOrientation.DIRECTION_LEFT_TO_RIGHT;
+import static com.cxmax.danmakuview.library.danmaku.param.DanmakuOrientation.DIRECTION_RIGHT_TO_LEFT;
+import static com.cxmax.danmakuview.library.danmaku.param.DanmakuOrientation.DIRECTION_TOP_TO_BOTTOM;
 
 /**
  * @describe :
@@ -46,14 +48,16 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
 
     @NonNull private final ITypePool typePool;
     @NonNull private List<?> data;
-    @NonNull private final DanmakuOptions options;
+    @NonNull private DanmakuOptions options;
     @NonNull private Context context;
     @NonNull private DanmakuHandler handler;
     @NonNull LayoutInflater inflater;
     @NonNull private Random random;
+    @NonNull private List<View> children;
 
     {
-        data = Collections.emptyList();
+        data = new ArrayList<>();
+        children = new ArrayList<>();
         typePool = new TypePoolImpl();
         options = DanmakuOptions.create();
         handler = DanmakuHandler.create(this);
@@ -85,7 +89,7 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
                 options.setDuration(attr.getInteger(R.styleable.DanmakuView_item_duration, DanmakuOptions.DEFAULT_DELAY_DURATION));
                 options.setMaxRowNum(attr.getInteger(R.styleable.DanmakuView_max_row_num, DanmakuOptions.DEFAULT_ROW_NUM));
                 options.setMaxShownNum(attr.getInteger(R.styleable.DanmakuView_max_children_num, DanmakuOptions.DEFAULT_MAX_SHOWN_NUM));
-                options.setOrientation(attr.getInteger(R.styleable.DanmakuView_common_orientation, DanmakuOrientation.DIRECTION_RIGHT_TO_LEFT));
+                options.setOrientation(attr.getInteger(R.styleable.DanmakuView_common_orientation, DIRECTION_RIGHT_TO_LEFT));
                 attr.recycle();
             }
         }
@@ -114,6 +118,35 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
     }
 
     @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);
+        // 摆放view位置的代码放在这里, 方便为了获取child的宽高
+        int childCount = getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            View view = getChildAt(i);
+            RelativeLayout.LayoutParams lp = (LayoutParams) view.getLayoutParams();
+            switch (options.getOrientation()) {
+                case DIRECTION_LEFT_TO_RIGHT :
+                    view.layout(-view.getWidth(), lp.topMargin, 0, lp.topMargin + view.getHeight());
+                    break;
+                case DIRECTION_RIGHT_TO_LEFT :
+                    view.layout(-view.getWidth(), lp.topMargin, view.getWidth(), lp.topMargin + view.getHeight());
+                    break;
+                case DIRECTION_TOP_TO_BOTTOM :
+                    view.layout(getWidth(), lp.topMargin + view.getHeight(), getWidth() + view.getWidth(), lp.topMargin);
+                    break;
+                case DIRECTION_BOTTOM_TO_TOP :
+                    view.layout(getWidth(), lp.topMargin, getWidth() + view.getWidth(), lp.topMargin + view.getHeight());
+                    break;
+                default:
+                    view.layout(getWidth(), lp.topMargin, getWidth() + view.getWidth(), lp.topMargin + view.getHeight());
+                    break;
+            }
+        }
+
+    }
+
+    @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         handler.release();
@@ -121,14 +154,10 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
 
     // ------------- 弹幕控制调用函数 -------------------
 
-    public void prepare(@NonNull DanmakuOptions options) {
-        assureNecessaryParamsNotNull(options);
-        removeAllViews();
-    }
-
     @Override
     public void prepare() {
-        prepare(options);
+        assureNecessaryParamsNotNull();
+        initializeChildrenView();
     }
 
     @Override
@@ -213,30 +242,6 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
         throw new NullPointerException("you haven't registered the provider for  {className}.class in the TypePool ".replace("{className}", item.toString()));
     }
 
-    @SuppressWarnings("unchecked")
-    AbsDanmakuItemProvider generateChildView() {
-        int pos = (int) (Math.random() * data.size());
-        int index = indexInTypesOf(data.get(pos));
-        AbsDanmakuItemProvider provider = typePool.getItemViewProviders().get(index);
-        // 创建 view
-        View child = provider.createView(inflater, null);
-        // 数据填充 view
-        provider.updateView(data.get(pos));
-        LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-        params.topMargin = random.nextInt(options.getMaxRowNum()) * provider.onMeasureHeight(data.get(pos));
-        AnimOption animOption = new AnimOption();
-        int start = this.getRight() - this.getLeft() - this.getPaddingLeft();
-        animOption.viewMeasuredWidth = provider.onMeasureWidth(data.get(pos));
-        Log.e(TAG, "generateChildView: " + provider.onMeasureWidth(data.get(pos)) );
-        animOption.startPos = start;
-        animOption.speed = (int) (DEFAULT_MIN_SPEED + (DEFAULT_MAX_SPEED - DEFAULT_MIN_SPEED) * Math.random());
-        provider.setAnimOption(animOption);
-        provider.setView(child);
-        addView(child, params);
-        return provider;
-    }
-
     private void checkAndRemoveAllTypesIfNeed(@NonNull Class<?> clazz) {
         if (!typePool.getClasses().contains(clazz)) {
             return;
@@ -255,7 +260,7 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
         }
     }
 
-    private void assureNecessaryParamsNotNull(@NonNull DanmakuOptions options) {
+    private void assureNecessaryParamsNotNull() {
         if (options.getCommonTextSize() == 0) {
             options.setCommonTextSize(context.getResources().getDimensionPixelSize(R.dimen.danmaku_common_text_size_12));
         }
@@ -271,8 +276,53 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
         if (options.getMaxShownNum() == 0) {
             options.setMaxShownNum(DanmakuOptions.DEFAULT_MAX_SHOWN_NUM);
         }
-        if (options.getOrientation() == 0) {
-            options.setOrientation(DanmakuOrientation.DIRECTION_RIGHT_TO_LEFT);
+        if (Asserts.isEmpty(data)) {
+            throw new IllegalStateException("you need setData() before prepare()");
+        }
+    }
+
+    private void addChildLayoutParamsViaOrientation(@DanmakuOrientation.Orientation int orientation, RelativeLayout.LayoutParams lp) {
+        switch (orientation) {
+            case DIRECTION_LEFT_TO_RIGHT :
+                lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+                break;
+            case DIRECTION_RIGHT_TO_LEFT :
+                lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                break;
+            case DIRECTION_TOP_TO_BOTTOM :
+                lp.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+                break;
+            case DIRECTION_BOTTOM_TO_TOP :
+                lp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+                break;
+            default:
+                lp.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+                break;
+        }
+    }
+
+
+    private void initializeChildrenView() {
+        for (int i = 0; i < data.size(); i++) {
+            createChildrenView(i, data.get(i), false);
+        }
+    }
+
+    void createChildrenView(int pos, Object data, boolean recreate) {
+        int index = indexInTypesOf(data);
+        final AbsDanmakuItemProvider provider = typePool.getItemViewProviders().get(index);
+        // 创建 view
+        final View child = provider.createView(inflater, null);
+        // 数据填充 view
+        provider.updateView(data);
+        RelativeLayout.LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        addChildLayoutParamsViaOrientation(options.getOrientation(), lp);
+        lp.topMargin = random.nextInt(400);
+        addView(child, lp);
+        if (recreate) {
+            children.set(pos, child);
+        } else {
+            children.add(pos, child);
         }
     }
 
@@ -280,7 +330,17 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
         this.data = data;
     }
 
+    @NonNull
+    public List<?> getData() {
+        return data;
+    }
+
     @NonNull public DanmakuOptions Options() {
         return options;
+    }
+
+    @NonNull
+    public List<View> getChildren() {
+        return children;
     }
 }

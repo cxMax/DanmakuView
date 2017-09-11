@@ -2,15 +2,15 @@ package com.cxmax.danmakuview.library.danmaku;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
-import android.annotation.SuppressLint;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
-import android.view.animation.DecelerateInterpolator;
+import android.util.Log;
+import android.view.View;
+import android.view.animation.LinearInterpolator;
 
-import com.cxmax.danmakuview.library.danmaku.model.AbsDanmakuItemProvider;
-import com.cxmax.danmakuview.library.danmaku.param.DanmakuOptions;
-
+import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -49,16 +49,13 @@ class  DanmakuHandler extends Handler {
         super.handleMessage(msg);
         switch (msg.what) {
             case ANIM_START:
-                final AbsDanmakuItemProvider child = danmakuView.generateChildView();
-                //todo orientation
-                @SuppressLint("ObjectAnimatorBinding")
-                final ObjectAnimator objAnim =ObjectAnimator
-                        //滑动位置是x方向滑动，从屏幕宽度+View的长度到左边0-View的长度
-                        .ofFloat(child,"translationX" , child.getAnimOption().startPos, -child.getAnimOption().viewMeasuredWidth)
+                List<View> children = danmakuView.getChildren();
+                final int pos = new Random(System.currentTimeMillis()).nextInt(100) % children.size();
+                final View child = children.get(pos);
+                final ObjectAnimator objAnim = ObjectAnimator
+                        .ofFloat(child,"translationX" , danmakuView.Options().width, -child.getWidth())
                         .setDuration(500);
-                //设置移动的过程速度，开始快之后满
-                objAnim.setInterpolator(new DecelerateInterpolator());
-                //开始动画
+                objAnim.setInterpolator(new LinearInterpolator());
                 objAnim.start();
 
                 objAnim.addListener(new Animator.AnimatorListener() {
@@ -69,10 +66,9 @@ class  DanmakuHandler extends Handler {
 
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        child.getView().clearAnimation();
+                        danmakuView.removeView(child);
+                        danmakuView.createChildrenView(pos, danmakuView.getData().get(pos), true);
                         animators.remove(animation);
-                        danmakuView.removeView(child.getView());
-//                        danmakuView.removeAllViews();
                     }
 
                     @Override
@@ -120,7 +116,6 @@ class  DanmakuHandler extends Handler {
     }
 
     private void sendNewStartMessageInRandomDelay() {
-        int duration = (int) ((DanmakuOptions.DEFAULT_MAX_DELAY_DURATION - DanmakuOptions.DEFAULT_MIN_DELAY_DURATION) * Math.random());
-        this.sendEmptyMessageDelayed(ANIM_START, duration);
+        this.sendEmptyMessageDelayed(ANIM_START, 800);
     }
 }

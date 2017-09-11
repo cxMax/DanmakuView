@@ -22,7 +22,7 @@ public class DanmakuOrientation {
 
     @IntDef(value = {DIRECTION_LEFT_TO_RIGHT, DIRECTION_RIGHT_TO_LEFT, DIRECTION_TOP_TO_BOTTOM, DIRECTION_BOTTOM_TO_TOP})
     @Retention(RetentionPolicy.SOURCE)
-    @interface Orientation {
+    public @interface Orientation {
     }
 
 }
