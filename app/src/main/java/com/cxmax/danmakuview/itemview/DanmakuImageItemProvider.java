@@ -47,7 +47,7 @@ public class DanmakuImageItemProvider extends AbsDanmakuItemProvider<Image> {
 
     @Override
     public void onViewDetached() {
-
+        layout.removeAllViews();
     }
 
 }

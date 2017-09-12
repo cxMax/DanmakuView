@@ -40,4 +40,5 @@ public abstract class AbsDanmakuItemProvider<T> {
     public View getView() {
         return view;
     }
+
 }

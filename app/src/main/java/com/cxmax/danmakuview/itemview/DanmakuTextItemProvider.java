@@ -36,7 +36,7 @@ public class DanmakuTextItemProvider extends AbsDanmakuItemProvider<Text>{
     }
 
     @Override
-    public void initView(@Nullable View root) {
+    public void initView(@NonNull View root) {
         layout = (ConstraintLayout) root.findViewById(R.id.layout);
         title = (TextView) root.findViewById(R.id.title);
     }
@@ -50,7 +50,7 @@ public class DanmakuTextItemProvider extends AbsDanmakuItemProvider<Text>{
 
     @Override
     public void onViewDetached() {
-
+        layout.removeAllViews();
     }
 
 }
