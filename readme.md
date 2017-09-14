@@ -64,6 +64,11 @@ public class DanmakuTextItemProvider extends AbsDanmakuItemProvider<T>{
     danmakuView.hide();
 ```
 
+## 不足之处
+相比于[Bilibili/DanmakuFlameMaster](https://github.com/Bilibili/DanmakuFlameMaster):  
+这个demo只是用简单和少量的代码方式实现较基础的弹幕.  
+如果不考虑引用新增的包大小, 直接用[Bilibili/DanmakuFlameMaster](https://github.com/Bilibili/DanmakuFlameMaster)会更全面\稳定.
+
 ## License MIT
   Copyright (C) 2017 cxMax  
   Copyright (C) 2017 DanmakuView
