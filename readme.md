@@ -52,11 +52,9 @@ public class DanmakuTextItemProvider extends AbsDanmakuItemProvider<T>{
     
     3. 设置弹幕的数据源
     danmakuView.setData()
-    
-    4. 调用prepare()
+
+    4. 通过IDanmakuView暴露的函数控制弹幕播放,关闭等行为
     danmakuView.prepare()
-    
-    5. 通过IDanmakuView暴露的函数控制弹幕播放,关闭等行为
     danmakuView.start();
     danmakuView.stop();
     danmakuView.pause();
