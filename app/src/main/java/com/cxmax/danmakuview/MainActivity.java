@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         danmakuView = (DanmakuView) findViewById(R.id.danmaku);
-        initializeImageDanmakuView();
+        initializePureTextDanmakuView();
         findViewById(R.id.start_btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

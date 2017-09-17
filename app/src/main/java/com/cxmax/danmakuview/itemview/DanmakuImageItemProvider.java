@@ -1,17 +1,19 @@
 package com.cxmax.danmakuview.itemview;
 
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
 
 import com.cxmax.danmakuview.R;
 import com.cxmax.danmakuview.bean.Image;
 import com.cxmax.danmakuview.library.danmaku.model.AbsDanmakuItemProvider;
+
+import java.util.Random;
 
 /**
  * @describe :
@@ -23,8 +25,6 @@ import com.cxmax.danmakuview.library.danmaku.model.AbsDanmakuItemProvider;
 
 public class DanmakuImageItemProvider extends AbsDanmakuItemProvider<Image> {
 
-    private LinearLayout layout;
-    private ImageView icon;
     private TextView title;
 
     @Override
@@ -33,21 +33,29 @@ public class DanmakuImageItemProvider extends AbsDanmakuItemProvider<Image> {
     }
 
     @Override
+    public ObjectAnimator generateChildAnimator(View child, View parent) {
+        ObjectAnimator objAnim = ObjectAnimator
+                .ofFloat(child,"translationX" , parent.getWidth(), -child.getWidth())
+                .setDuration(new Random().nextInt(6000 - 3000) + 3000);
+        objAnim.setInterpolator(new LinearInterpolator());
+        return objAnim;
+    }
+
+    @Override
     public void initView(@NonNull View root) {
-        layout = (LinearLayout) root.findViewById(R.id.layout);
-        icon = (ImageView) root.findViewById(R.id.icon);
         title = (TextView) root.findViewById(R.id.title);
     }
 
     @Override
     public void updateView(Image image) {
-        icon.setImageResource(R.mipmap.ic_launcher);
         title.setText(image.title);
-    }
-
-    @Override
-    public void onViewDetached() {
-        layout.removeAllViews();
+        Random random = new Random(System.currentTimeMillis());
+        title.setTextColor(Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256)));
+        if (title.getContext() != null) {
+            Drawable drawable = title.getContext().getResources().getDrawable(R.mipmap.ic_launcher);
+            drawable.setBounds(0, 0, drawable.getMinimumWidth(), drawable.getMinimumHeight());
+            title.setCompoundDrawables(drawable, null, null, null);
+        }
     }
 
 }

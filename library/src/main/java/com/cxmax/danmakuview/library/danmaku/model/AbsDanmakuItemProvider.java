@@ -1,5 +1,7 @@
 package com.cxmax.danmakuview.library.danmaku.model;
 
+import android.animation.ObjectAnimator;
+import android.support.annotation.CheckResult;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -20,22 +22,19 @@ public abstract class AbsDanmakuItemProvider<T> {
 
     private View view;
 
-    public View createView(@NonNull LayoutInflater inflater,@Nullable ViewGroup parent) {
+    public View createView(@NonNull LayoutInflater inflater, @Nullable ViewGroup parent) {
         view = inflater.inflate(initializeLayoutRes(), parent);
         initView(view);
         return view;
     }
 
-    @LayoutRes public abstract int initializeLayoutRes();
+    @CheckResult @LayoutRes public abstract int initializeLayoutRes();
+
+    public abstract ObjectAnimator generateChildAnimator(View child, View parent);
 
     public abstract void initView(@NonNull View root);
 
     public abstract void updateView(T t);
-
-    /**
-     * release resource
-     */
-    public abstract void onViewDetached();
 
     public View getView() {
         return view;

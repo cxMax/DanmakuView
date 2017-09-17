@@ -5,12 +5,9 @@ import android.animation.ObjectAnimator;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.LinearInterpolator;
 
-import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -23,7 +20,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * Created by cxmax on 2017/9/3.
  */
 
-class  DanmakuHandler extends Handler {
+class DanmakuHandler extends Handler {
 
     static final int ANIM_START = 0x100; //256
     static final int ANIM_RESUME = 0x101; //257
@@ -36,15 +33,15 @@ class  DanmakuHandler extends Handler {
 
     {
         animators = new CopyOnWriteArraySet<>();
-        random = new Random(System.currentTimeMillis());
     }
 
-    DanmakuHandler(@NonNull DanmakuView danmakuView) {
+    DanmakuHandler(@NonNull DanmakuView danmakuView, Random random) {
         this.danmakuView = danmakuView;
+        this.random = random;
     }
 
-    public static DanmakuHandler create(@NonNull DanmakuView danmakuView) {
-        return new DanmakuHandler(danmakuView);
+    public static DanmakuHandler create(@NonNull DanmakuView danmakuView, @NonNull Random random) {
+        return new DanmakuHandler(danmakuView, random);
     }
 
     @Override
@@ -52,13 +49,10 @@ class  DanmakuHandler extends Handler {
         super.handleMessage(msg);
         switch (msg.what) {
             case ANIM_START:
-                final List<View> children = danmakuView.getChildren();
                 final int pos = msg.arg1;
-                final View child = children.get(pos);
-                final ObjectAnimator objAnim = ObjectAnimator
-                        .ofFloat(child,"translationX" , danmakuView.config().width, -child.getWidth())
-                        .setDuration(random.nextInt(6000 - 3000) + 3000);
-                objAnim.setInterpolator(new LinearInterpolator());
+                final Object obj = danmakuView.getData().get(pos);
+                final View child = (View) msg.obj;
+                final ObjectAnimator objAnim = danmakuView.getAnimatorViaData(obj, child);
                 objAnim.start();
 
                 objAnim.addListener(new Animator.AnimatorListener() {
@@ -72,9 +66,10 @@ class  DanmakuHandler extends Handler {
                         if (child instanceof ViewGroup) {
                             ((ViewGroup)child).removeAllViews();
                         }
+                        animators.remove(objAnim);
                         danmakuView.removeView(child);
-                        animators.remove(animation);
-                        sendNewStartMessageInRandomDelay(pos);
+                        int index = random.nextInt(100) % danmakuView.getData().size();
+                        danmakuView.createChildView(index);
                     }
 
                     @Override
@@ -89,20 +84,23 @@ class  DanmakuHandler extends Handler {
                 });
                 animators.add(objAnim);
                 break;
+
             case ANIM_RESUME:
-                for (ObjectAnimator animator: animators) {
+                for (Animator animator: animators) {
                     if (animator.isPaused()) {
                         animator.resume();
                     }
                 }
                 break;
+
             case ANIM_PAUSE:
-                for (ObjectAnimator animator: animators) {
+                for (Animator animator: animators) {
                     if (animator.isRunning()) {
                         animator.pause();
                     }
                 }
                 break;
+
             case ANIM_STOP:
                 release();
                 break;
@@ -111,28 +109,26 @@ class  DanmakuHandler extends Handler {
     }
 
     public void release() {
-        for (ObjectAnimator animator : animators) {
+        for (Animator animator : animators) {
             animator.cancel();
         }
         animators.clear();
-        danmakuView.removeAllViews();
         removeCallbacksAndMessages(null);
+        System.gc();
     }
 
-    private void sendNewStartMessageInRandomDelay(int pos) {
-        int index = getNonDuplicateIndex(pos);
-        danmakuView.createChildrenView(pos, danmakuView.getData().get(index), true);
+    /**
+     *
+     * @param pos 获取到data , 从而获取到ObjectAnimator
+     * @param view 开始动画的View
+     */
+    void sendSingleViewStartMessageInRandomDelay(int pos, View view) {
         Message message = new Message();
         message.what = DanmakuHandler.ANIM_START;
         message.arg1 = pos;
+        message.obj = view;
         sendMessageDelayed(message, 800);
     }
 
-    private int getNonDuplicateIndex(int pos) {
-        int index = random.nextInt(100) % danmakuView.getData().size();
-        if (index == pos) {
-            return getNonDuplicateIndex(index);
-        }
-        return index;
-    }
+
 }

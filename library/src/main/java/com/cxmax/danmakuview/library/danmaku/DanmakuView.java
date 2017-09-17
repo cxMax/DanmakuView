@@ -1,8 +1,8 @@
 package com.cxmax.danmakuview.library.danmaku;
 
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -27,10 +27,8 @@ import com.cxmax.danmakuview.library.utils.Asserts;
 import com.cxmax.danmakuview.library.utils.DevicesUtil;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 import static com.cxmax.danmakuview.library.danmaku.param.DanmakuOrientation.DIRECTION_BOTTOM_TO_TOP;
 import static com.cxmax.danmakuview.library.danmaku.param.DanmakuOrientation.DIRECTION_LEFT_TO_RIGHT;
@@ -44,37 +42,23 @@ import static com.cxmax.danmakuview.library.danmaku.param.DanmakuOrientation.DIR
  * </p>
  * Created by caixi on 17-8-31.
  */
-
 public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuView {
 
     private static final String TAG = "com.cxmax.DanmakuView";
 
-    @NonNull
-    private final ITypePool typePool;
-    @NonNull
-    private List<?> data;
-    @NonNull
-    private DanmakuConfig options;
-    @NonNull
-    private Context context;
-    @NonNull
-    private DanmakuHandler handler;
-    @NonNull
-    LayoutInflater inflater;
-    @NonNull
-    private Random random;
-    @NonNull
-    private List<View> children;
-    private Set<AbsDanmakuItemProvider> providers;
+    @NonNull private final ITypePool typePool;
+    @NonNull private List<?> data;
+    @NonNull private DanmakuConfig options;
+    @NonNull private Context context;
+    @NonNull private DanmakuHandler handler;
+    @NonNull private Random random;
 
     {
         data = new ArrayList<>();
-        children = new ArrayList<>();
-        providers = new HashSet<>();
         typePool = new TypePoolImpl();
         options = DanmakuConfig.create();
-        handler = DanmakuHandler.create(this);
         random = new Random(System.currentTimeMillis());
+        handler = DanmakuHandler.create(this, random);
     }
 
     public DanmakuView(Context context) {
@@ -88,7 +72,6 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
     public DanmakuView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         this.context = context;
-        inflater = LayoutInflater.from(context);
         initializeCustomAttrs(context, attrs);
     }
 
@@ -162,7 +145,7 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        handler.release();
+        release();
     }
 
     // ------------- 弹幕控制调用函数 -------------------
@@ -170,26 +153,18 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
     @Override
     public void prepare() {
         assureNecessaryParamsNotNull();
-        initializeChildrenView();
     }
 
     @Override
     public void start() {
         if (getChildCount() == 0) {
-            initializeChildrenView();
-        }
-        for (int i = 0; i < children.size(); i++) {
-            Message message = new Message();
-            message.what = DanmakuHandler.ANIM_START;
-            message.arg1 = i;
-            handler.sendMessage(message);
+            initializeChildren();
         }
     }
 
     @Override
     public void stop() {
-        handler.removeMessages(DanmakuHandler.ANIM_START);
-        handler.sendEmptyMessage(DanmakuHandler.ANIM_STOP);
+        release();
     }
 
     @Override
@@ -205,20 +180,19 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
 
     @Override
     public void release() {
-        for (AbsDanmakuItemProvider provider : providers) {
-            provider.onViewDetached();
-        }
         handler.release();
         removeAllViews();
     }
 
     @Override
     public void show() {
+        resume();
         setVisibility(VISIBLE);
     }
 
     @Override
     public void hide() {
+        pause();
         setVisibility(GONE);
     }
 
@@ -326,32 +300,33 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
     }
 
 
-    private void initializeChildrenView() {
+    private void initializeChildren() {
         for (int i = 0; i < data.size(); i++) {
-            createChildrenView(i, data.get(i), false);
+            createChildView(i);
         }
     }
 
-    void createChildrenView(int pos, Object data, boolean recreate) {
-        int index = indexInTypesOf(data);
-        final AbsDanmakuItemProvider provider = typePool.getItemViewProviders().get(index);
-        if (!providers.contains(provider)) {
-            providers.add(provider);
-        }
+    void createChildView(int pos) {
+        AbsDanmakuItemProvider provider = getProviderViaData(data.get(pos));
         // 创建 view
-        final View child = provider.createView(inflater, null);
+        View child =  provider.createView(LayoutInflater.from(context), null);
         // 数据填充 view
-        provider.updateView(data);
+        provider.updateView(data.get(pos));
         RelativeLayout.LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         addChildLayoutParamsViaOrientation(options.getOrientation(), lp);
-        lp.topMargin = random.nextInt(400);
+        lp.topMargin = random.nextInt(options.height);
         addView(child, lp);
-        if (recreate) {
-            children.set(pos, child);
-        } else {
-            children.add(pos, child);
-        }
-        Log.e(TAG, "createChildrenView: " + getChildCount());
+
+        handler.sendSingleViewStartMessageInRandomDelay(pos, child);
+    }
+
+    @NonNull AbsDanmakuItemProvider getProviderViaData(Object obj) {
+        int index = indexInTypesOf(obj);
+        return typePool.getItemViewProviders().get(index);
+    }
+
+    ObjectAnimator getAnimatorViaData(Object obj, View child) {
+        return getProviderViaData(obj).generateChildAnimator(child, this);
     }
 
     public void setData(@NonNull List<?> data) {
@@ -368,8 +343,4 @@ public class DanmakuView extends RelativeLayout implements IAdapter, IDanmakuVie
         return options;
     }
 
-    @NonNull
-    public List<View> getChildren() {
-        return children;
-    }
 }

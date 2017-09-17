@@ -1,7 +1,5 @@
 package com.cxmax.danmakuview.library.danmaku;
 
-import android.support.annotation.NonNull;
-
 /**
  * @describe :
  * @usage :

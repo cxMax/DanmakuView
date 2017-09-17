@@ -1,14 +1,11 @@
 package com.cxmax.danmakuview.itemview;
 
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
-import android.text.TextPaint;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
+import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
 
 import com.cxmax.danmakuview.R;
@@ -28,7 +25,6 @@ import java.util.Random;
 public class DanmakuTextItemProvider extends AbsDanmakuItemProvider<Text>{
 
     private TextView title;
-    private ConstraintLayout layout;
 
     @Override
     public int initializeLayoutRes() {
@@ -36,8 +32,16 @@ public class DanmakuTextItemProvider extends AbsDanmakuItemProvider<Text>{
     }
 
     @Override
+    public ObjectAnimator generateChildAnimator(View child, View parent) {
+        ObjectAnimator objAnim = ObjectAnimator
+                .ofFloat(child,"translationX" , parent.getWidth(), -child.getWidth())
+                .setDuration(new Random().nextInt(6000 - 3000) + 3000);
+        objAnim.setInterpolator(new LinearInterpolator());
+        return objAnim;
+    }
+
+    @Override
     public void initView(@NonNull View root) {
-        layout = (ConstraintLayout) root.findViewById(R.id.layout);
         title = (TextView) root.findViewById(R.id.title);
     }
 
@@ -46,11 +50,6 @@ public class DanmakuTextItemProvider extends AbsDanmakuItemProvider<Text>{
         title.setText(text.title);
         Random random = new Random(System.currentTimeMillis());
         title.setTextColor(Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256)));
-    }
-
-    @Override
-    public void onViewDetached() {
-        layout.removeAllViews();
     }
 
 }
