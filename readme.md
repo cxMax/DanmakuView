@@ -1,6 +1,6 @@
 # DanmakuView
 
-## 简介 : 
+## 简介 : [Readme_In_English](https://github.com/cxMax/DanmakuView/blob/master/doc/readme_EN.md)
 自定义弹幕view
 
 ## 效果图
