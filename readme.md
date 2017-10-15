@@ -4,7 +4,8 @@
 自定义弹幕view
 
 ## 效果图
-
+ ![image](https://github.com/cxMax/DanmakuView/blob/master/doc/barrier.gif)
+ 
 ## 特性 : 
 * 通过xml定义弹幕样式,Animator实现弹幕滚动,较高的定制性;
 * 简化注册/分发多类型的弹幕样式
